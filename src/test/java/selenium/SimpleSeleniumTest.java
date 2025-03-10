@@ -6,6 +6,7 @@ import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.edge.EdgeOptions;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import io.qameta.allure.Attachment;
@@ -30,8 +31,13 @@ public class SimpleSeleniumTest {
 
     @BeforeClass
     public void setUp() {
+        // add "old" solution for comparison
         WebDriverManager.edgedriver().setup();
-        driver = new EdgeDriver();
+        EdgeOptions options = new EdgeOptions();
+        options.addArguments("--disable-notifications");
+        options.addArguments("--disable-popup-blocking");
+        options.addArguments("--disable-infobars");
+        driver = new EdgeDriver(options);
     }
 
     @Test
@@ -48,12 +54,15 @@ public class SimpleSeleniumTest {
     @Description("Searches for 'Selenium WebDriver' and checks the title.")
     public void testSearch() {
         driver.get("https://www.google.com");
+        WebElement rejecElement = driver.findElement(By.xpath("(//button)[4]"));
+        rejecElement.click();
         WebElement searchBox = driver.findElement(By.name("q"));
         takeScreenshot(driver);
         searchBox.click();
         searchBox.sendKeys("Selenium WebDriver");
         searchBox.submit();
         Assertions.assertThat(driver.getTitle()).contains("Selenium");
+        takeScreenshot(driver);
     }
 
     @AfterClass
@@ -63,8 +72,8 @@ public class SimpleSeleniumTest {
         }
     }
 
-    @Attachment(value = "Screenshot on failure", type = "image/png")
-    @Step
+    @Attachment(value = "Screenshot", type = "image/png")
+    @Step("Take screenshot")
     public byte[] takeScreenshot(WebDriver driver) {
         // Take a screenshot and return the byte array
         TakesScreenshot ts = (TakesScreenshot) driver;

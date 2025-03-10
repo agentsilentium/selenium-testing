@@ -60,26 +60,6 @@ test {
     systemProperty 'browser', System.getProperty('browser', 'edge')
     systemProperty 'baseUrl', System.getProperty('baseUrl', 'https://www.google.com')
     systemProperty 'headless', System.getProperty('headless', 'false')
-
-    // Configure test task with AspectJ agent for Allure
-    doFirst {
-        jvmArgs "-javaagent:${configurations.testRuntimeClasspath.find { it.name.contains("aspectjweaver") }}"
-    }
-}
-
-// Task to create a directory for screenshots if it doesn't exist
-task createScreenshotsDir {
-    doLast {
-        mkdir "build/screenshots"
-    }
-}
-
-// Make test task depend on creating screenshots directory
-test.dependsOn createScreenshotsDir
-
-// Task to clear test reports and screenshots
-task cleanReports(type: Delete) {
-    delete "buil/test-results", "build/allure-results", "reports/allure-report", "build/screenshots"
 }
 
 gradle.taskGraph.whenReady { graph ->
