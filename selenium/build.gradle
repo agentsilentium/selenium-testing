@@ -1,0 +1,110 @@
+plugins {
+    id 'java'
+    id 'io.qameta.allure' version '2.12.0'
+}
+
+group = 'com.example'
+version = '1.0'
+sourceCompatibility = 11
+targetCompatibility = 11
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    allureVersion = '2.24.0'
+    aspectjVersion = '1.9.20.1'
+}
+
+allure {
+
+    version = allureVersion
+    autoconfigure = true
+    aspectjweaver = true
+
+    report {
+        reportDir.set(project.reporting.baseDirectory.dir("allure-report"))
+    }
+}
+
+dependencies {
+    implementation 'org.seleniumhq.selenium:selenium-java:4.15.0'
+    // WebDriverManager to handle driver binaries automatically
+    implementation 'io.github.bonigarcia:webdrivermanager:5.5.3'
+    testImplementation 'org.testng:testng:7.8.0'
+    // Allure reporting
+    testImplementation "io.qameta.allure:allure-testng:${allureVersion}"
+    testImplementation "io.qameta.allure:allure-java-commons:${allureVersion}"
+    // AspectJ required for Allure
+    testImplementation "org.aspectj:aspectjweaver:${aspectjVersion}"
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    implementation 'ch.qos.logback:logback-classic:1.4.11'
+    // AssertJ for fluent assertions
+    testImplementation 'org.assertj:assertj-core:3.24.2'
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+test {
+    useTestNG() {
+        // TestNG configuration options
+        suites 'src/test/resources/testng.xml'
+
+        // Output directory for TestNG reports
+        outputDirectory = file("$buildDir/test-results/testng")
+    }
+
+    // Show standard out and standard error of the test JVM(s)
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+        showStandardStreams = true
+    }
+
+    // Set system properties for tests
+    systemProperty 'browser', System.getProperty('browser', 'chrome')
+    systemProperty 'baseUrl', System.getProperty('baseUrl', 'https://www.example.com')
+    systemProperty 'headless', System.getProperty('headless', 'false')
+    systemProperty 'allure.results.directory', 'build/allure-results'
+
+    // Always run tests even when up-to-date
+    outputs.upToDateWhen { false }
+
+    // Configure test task with AspectJ agent for Allure
+    doFirst {
+        jvmArgs "-javaagent:${configurations.testRuntimeClasspath.find { it.name.contains("aspectjweaver") }}"
+    }
+}
+
+// Task to create a directory for screenshots if it doesn't exist
+task createScreenshotsDir {
+    doLast {
+        mkdir "build/screenshots"
+    }
+}
+
+// Make test task depend on creating screenshots directory
+test.dependsOn createScreenshotsDir
+
+// Task to clear test reports and screenshots
+task cleanReports(type: Delete) {
+    delete "build/test-results", "build/allure-results", "build/reports/allure-report", "build/screenshots"
+}
+
+// Custom task to run a specific test suite
+task specificTests(type: Test) {
+    useTestNG() {
+        suites 'src/test/resources/specific-tests.xml'
+        outputDirectory = file("$buildDir/test-results/specific-tests")
+    }
+
+    // Set Allure results directory
+    systemProperty 'allure.results.directory', 'build/allure-results'
+
+    doFirst {
+        jvmArgs "-javaagent:${configurations.testRuntimeClasspath.find { it.name.contains("aspectjweaver") }}"
+    }
+}
