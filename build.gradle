@@ -18,14 +18,9 @@ ext {
 }
 
 allure {
-
     version = allureVersion
     autoconfigure = true
     aspectjweaver = true
-
-    report {
-        reportDir.set(project.reporting.baseDirectory.dir("allure-report"))
-    }
 }
 
 dependencies {
@@ -37,12 +32,12 @@ dependencies {
     testImplementation "io.qameta.allure:allure-testng:${allureVersion}"
     testImplementation "io.qameta.allure:allure-java-commons:${allureVersion}"
     // AspectJ required for Allure
-    testImplementation "org.aspectj:aspectjweaver:${aspectjVersion}"
+    implementation "org.aspectj:aspectjweaver:${aspectjVersion}"
     // Logging
     implementation 'org.slf4j:slf4j-api:2.0.9'
     implementation 'ch.qos.logback:logback-classic:1.4.11'
     // AssertJ for fluent assertions
-    testImplementation 'org.assertj:assertj-core:3.24.2'
+    implementation 'org.assertj:assertj-core:3.24.2'
 }
 
 tasks.withType(JavaCompile) {
@@ -51,9 +46,6 @@ tasks.withType(JavaCompile) {
 
 test {
     useTestNG() {
-        // TestNG configuration options
-        suites 'src/test/resources/testng.xml'
-
         // Output directory for TestNG reports
         outputDirectory = file("$buildDir/test-results/testng")
     }
@@ -65,13 +57,9 @@ test {
     }
 
     // Set system properties for tests
-    systemProperty 'browser', System.getProperty('browser', 'chrome')
-    systemProperty 'baseUrl', System.getProperty('baseUrl', 'https://www.example.com')
+    systemProperty 'browser', System.getProperty('browser', 'edge')
+    systemProperty 'baseUrl', System.getProperty('baseUrl', 'https://www.google.com')
     systemProperty 'headless', System.getProperty('headless', 'false')
-    systemProperty 'allure.results.directory', 'build/allure-results'
-
-    // Always run tests even when up-to-date
-    outputs.upToDateWhen { false }
 
     // Configure test task with AspectJ agent for Allure
     doFirst {
@@ -91,20 +79,12 @@ test.dependsOn createScreenshotsDir
 
 // Task to clear test reports and screenshots
 task cleanReports(type: Delete) {
-    delete "build/test-results", "build/allure-results", "build/reports/allure-report", "build/screenshots"
+    delete "buil/test-results", "build/allure-results", "reports/allure-report", "build/screenshots"
 }
 
-// Custom task to run a specific test suite
-task specificTests(type: Test) {
-    useTestNG() {
-        suites 'src/test/resources/specific-tests.xml'
-        outputDirectory = file("$buildDir/test-results/specific-tests")
-    }
-
-    // Set Allure results directory
-    systemProperty 'allure.results.directory', 'build/allure-results'
-
-    doFirst {
-        jvmArgs "-javaagent:${configurations.testRuntimeClasspath.find { it.name.contains("aspectjweaver") }}"
+gradle.taskGraph.whenReady { graph ->
+    if (graph.hasTask(build)) {
+        // these are not unit tests
+        test.enabled = false
     }
 }
