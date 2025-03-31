@@ -53,7 +53,7 @@ public abstract class BasePage<T extends BasePage<T>> {
     }
 
     protected T goToPage() {
-        String finalUrl = "https://the-internet.herokuapp.com/" + getPageUrl();
+        String finalUrl = "https://the-internet.herokuapp.com" + getPageUrl();
         webDriver.get(finalUrl);
         waitForPageInitialized();
         return self();
@@ -86,14 +86,15 @@ public abstract class BasePage<T extends BasePage<T>> {
                 // log
                 return;
             }
-            String timeStamp = new SimpleDateFormat("MM-dd-HH-mm:ss:SS").format(new Date());
-            File attachedScreenshot = new File("./screenshots/" + timeStamp + ".png");
+            String timeStamp = new SimpleDateFormat("MMddHHmmssSS").format(new Date());
+            String currentDir = System.getProperty("user.dir");
+            File attachedScreenshot = new File(currentDir + "/screenshots/" + timeStamp + ".png");
             try {
                 FileUtils.copyFile(screenshot, attachedScreenshot);
                 attachedScreenshot.setReadable(true, false);
                 attachedScreenshot.setWritable(true, false);
             } catch (IOException e) {
-                // log
+                LOGGER.info("what");
             }
         }
     }

@@ -29,8 +29,8 @@ dependencies {
     implementation 'io.github.bonigarcia:webdrivermanager:5.5.3'
     testImplementation 'org.testng:testng:7.8.0'
     // Allure reporting
-    testImplementation "io.qameta.allure:allure-testng:${allureVersion}"
-    testImplementation "io.qameta.allure:allure-java-commons:${allureVersion}"
+    //testImplementation "io.qameta.allure:allure-testng:${allureVersion}"
+    //testImplementation "io.qameta.allure:allure-java-commons:${allureVersion}"
     // AspectJ required for Allure
     implementation "org.aspectj:aspectjweaver:${aspectjVersion}"
     // Logging
@@ -45,10 +45,8 @@ tasks.withType(JavaCompile) {
 }
 
 test {
-    useTestNG() {
-        // Output directory for TestNG reports
-        outputDirectory = file("$buildDir/test-results/testng")
-    }
+    useTestNG()
+    reports.html.required = true
 
     // Show standard out and standard error of the test JVM(s)
     testLogging {
@@ -60,6 +58,13 @@ test {
     systemProperty 'browser', System.getProperty('browser', 'edge')
     systemProperty 'baseUrl', System.getProperty('baseUrl', 'https://www.google.com')
     systemProperty 'headless', System.getProperty('headless', 'false')
+}
+
+tasks.register("runTestInProgress", Test) {
+    useTestNG()
+    options {
+        includeGroups "inProgress"
+    }
 }
 
 gradle.taskGraph.whenReady { graph ->
